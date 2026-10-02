@@ -26,23 +26,28 @@ docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash && pytho
 
 ## 2. Напишите ноду
 
-Заполните четыре `TODO` в [student_node.py](student_node.py):
+Функции `rotation_matrix()` и `correct_points()` в [student_node.py](student_node.py) уже реализованы: они строят матрицу поворота и применяют её к конечным координатам, сохраняя остальные строки массива.
 
-1. Постройте матрицу `R = Rz(yaw) @ Ry(pitch) @ Rx(roll)`.
-2. Примените поворот к массиву координат. Каждая точка в NumPy хранится строкой; неконечные координаты оставьте без изменения.
-3. Создайте ROS Publisher и Subscriber.
-4. В callback прочитайте координаты, поверните их, сформируйте и опубликуйте исправленное сообщение.
+Заполните два `TODO`:
 
-До выполнения `TODO` заготовка намеренно выдаёт `NotImplementedError`, а тесты не проходят. Функции чтения и упаковки `PointCloud2` уже даны в `cloud_io.py`.
+1. Создайте ROS Publisher и Subscriber по контракту сообщений ниже.
+2. В callback используйте готовые функции, чтобы прочитать координаты, повернуть их, сформировать и опубликовать исправленное сообщение.
+
+До выполнения `TODO` запуск ноды намеренно выдаёт `NotImplementedError`. Функции чтения и упаковки `PointCloud2` уже даны в `cloud_io.py`.
 
 В [config.yaml](config.yaml) задаются **углы вашей коррекции** в градусах. Они не являются известными углами искажения. Подробное объяснение матриц и подбора углов — в разделах 3–4 [полного задания](assignment.html).
 
 ## 3. Проверьте и запустите
 
-После выполнения `TODO`:
+Тесты геометрии можно запустить сразу — они проверяют предоставленные функции поворота и должны проходить до выполнения `TODO`:
 
 ```sh
 docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash && python3 -m unittest test_student -v"
+```
+
+Эти тесты не проверяют Publisher, Subscriber и callback. После выполнения двух `TODO` запустите обработку bag:
+
+```sh
 docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash && python3 run_lab.py input.bag --out output/attempt01"
 ```
 

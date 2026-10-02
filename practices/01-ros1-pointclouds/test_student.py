@@ -1,4 +1,7 @@
-"""Run after completing TODO 1-2: python3 -m unittest test_student -v."""
+"""Tests for the provided geometry; these do not test the student's ROS TODOs.
+
+Run at any time: python3 -m unittest test_student -v.
+"""
 import unittest
 import numpy as np
 from student_node import rotation_matrix, correct_points
