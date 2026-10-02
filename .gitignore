@@ -1,0 +1,29 @@
+# Индивидуальные данные и результаты не публикуются в Git.
+*.bag
+*.bag.active
+*.bag.orig
+*.db3
+*.mcap
+*.rrd
+output/
+outputs/
+
+# Локальное Python-окружение и кеши.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+Thumbs.db
+
+# Локальные настройки и секреты.
+.env
+.env.*
+.idea/
+.vscode/
+
+# Материалы преподавателя не входят в студенческий репозиторий.
+instructor/
+answers_private.json
+solution_node.py

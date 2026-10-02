@@ -1,0 +1,4 @@
+# Angles of the correction YOU apply, in degrees. Initially no rotation.
+roll_deg: 0.0
+pitch_deg: 0.0
+yaw_deg: 0.0

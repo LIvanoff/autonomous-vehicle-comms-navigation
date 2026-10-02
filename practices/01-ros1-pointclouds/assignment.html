@@ -1,0 +1,50 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Практика ROS 1: ориентация облака</title><link rel="stylesheet" href="guide.css"></head><body><main>
+<p class="meta">Организация системы связи и навигации беспилотных транспортных средств · часть 1 · практика 90 минут</p>
+<h1>Верните облаку правильную ориентацию</h1>
+<p>Вам выдан короткий ROS 1 bag с реальными данными верхнего лидара Ouster. Во все облака внесён один и тот же неизвестный поворот. Напишите ноду, которая получает облако из топика, поворачивает координаты точек и публикует исправленное облако.</p>
+<div class="note"><b>Что значит «правильно»:</b> дорога находится внизу и примерно горизонтальна, вертикальные объекты направлены вверх. Начало координат остаётся в лидаре, поэтому дорога не обязана находиться на Z=0. Перенос, масштабирование, отражение и удаление точек не нужны. Направление вокруг вертикали (yaw) без внешнего ориентира не оценивается.</div>
+<h2>1. Что дано и что делаете вы</h2>
+<table><tr><th>Готово в заготовке</th><th>Нужно написать</th></tr><tr><td>Docker с ROS 1 Noetic, Python 3, NumPy. Разбор двоичного PointCloud2; запись результата; изображения без X11.</td><td>Матрица поворота; применение к точкам; ROS Publisher и Subscriber; callback. Затем подобрать углы по изображениям.</td></tr></table>
+<p>В <code>student_node.py</code> четыре TODO. Для первой проверки можно временно вернуть единичную матрицу и копию массива: результат должен совпасть с входом. После этого добавляйте поворот.</p>
+<p><code>input.bag → rosbag play → /points_raw → ваша нода → /points_corrected → corrected.bag → PNG/GIF</code></p>
+<p>Нода подписывается на поток сообщений. Сам файл читает готовый <code>rosbag play</code>. Это позволяет потом заменить запись настоящим драйвером лидара без переделки вашей ноды.</p>
+<h2>2. Запуск без RViz и X11</h2>
+<p>До пары установите Docker Desktop с Linux containers и соберите образ. Распакуйте общую заготовку, а свой <code>input.bag</code> положите рядом с <code>compose.yaml</code>. Все команды запускаются из этой папки; одинаково в PowerShell и Linux shell.</p>
+<pre>docker compose build
+docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash &amp;&amp; rosbag info input.bag"
+docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash &amp;&amp; python3 preview.py input.bag --out output/before"</pre>
+<p>Откройте <code>output/before/index.html</code> обычным браузером на своём компьютере. В папке также будут PNG и <code>animation.gif</code>. Доступ к графическому экрану контейнеру не нужен.</p>
+<p>После реализации TODO и изменения <code>config.yaml</code>:</p>
+<pre>docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash &amp;&amp; python3 -m unittest test_student -v"
+docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash &amp;&amp; python3 run_lab.py input.bag --out output/attempt01"</pre>
+<p>Команда поднимет отдельный ROS master, вашу ноду и запись выходного топика. Бэг проигрывается на половинной скорости, затем строятся картинки. Откройте <code>output/attempt01/preview/index.html</code>. Для следующей попытки используйте <code>attempt02</code>: предыдущие результаты сохраняются.</p>
+<p>Для быстрого подбора можно отключить отрисовку всех кадров и нарисовать один:</p>
+<pre>docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash &amp;&amp; python3 run_lab.py input.bag --out output/attempt02 --no-preview"
+docker compose run --rm lab bash -lc "source /opt/ros/noetic/setup.bash &amp;&amp; python3 preview.py output/attempt02/corrected.bag --topic /points_corrected --out output/attempt02/preview --step 20"</pre>
+<h2>3. Как подбирать углы</h2>
+<ol><li>Сначала посмотрите XZ и YZ: сверху наклон дороги виден хуже. Оси и камера между попытками не меняются.</li><li>Если дорога оказалась над датчиком, попробуйте грубый разворот на 180° вокруг горизонтальной оси. Не меняйте знак только одной координаты: это отражение, а не поворот.</li><li>Подбирайте roll и pitch сначала шагом 10–15°, затем 2–3°. Проверяйте обе боковые проекции после каждого изменения.</li><li>Сравните начало, середину и конец записи. Хорошая ориентация должна сохраняться на всём фрагменте.</li><li>Не пытайтесь сделать идеально горизонтальной каждую точку дороги: существуют уклон, бордюры, шум и движение автомобиля. У одного бэга — одна постоянная коррекция.</li></ol>
+<p>Для сдачи достаточно восстановить вертикаль с допуском 3° относительно подготовленного эталона. Преподаватель проверит угол отдельно. Этот допуск — учебный критерий, а не спецификация точности лидара или калибровки.</p>
+<h2>4. Как понимать матрицы</h2>
+<p>Поворот меняет координаты одной и той же точки. Для точки-столбца <code>p=[x,y,z]ᵀ</code> договоримся:</p>
+<pre>p_out = R · p_in
+R = Rz(yaw) · Ry(pitch) · Rx(roll)
+
+Rx = [[1,  0,   0],   Ry = [[ cp, 0, sp],   Rz = [[cy, -sy, 0],
+      [0, cr, -sr],         [  0, 1,  0],         [sy,  cy, 0],
+      [0, sr,  cr]]         [-sp, 0, cp]]         [ 0,   0, 1]]
+
+cr = cos(roll), sr = sin(roll); аналогично pitch и yaw.
+Перед sin/cos переведите градусы в радианы.</pre>
+<p>Справа налево: сначала Rx, затем Ry, затем Rz, все вокруг фиксированных осей. В массиве NumPy каждая точка лежит <em>строкой</em>. Подумайте, какая матрица должна стоять справа при обработке сразу N точек. Проверьте на примере: +90° вокруг Z переводит (1,0,0) в (0,1,0).</p>
+<p><code>config.yaml</code> содержит <b>углы вашей коррекции</b>. Это не известные углы испорченного датчика. Для известной матрицы искажения обратная равна транспонированной, но при подборе по виду облака вы сразу ищете исправляющий поворот. Простая смена знаков трёх углов при сохранении порядка в общем случае не даёт обратную матрицу.</p>
+<h2>5. Контракт сообщений</h2>
+<ul><li>Вход: <code>/points_raw</code>, тип <code>sensor_msgs/PointCloud2</code>, frame <code>lidar_corrupted</code>.</li><li>Выход: <code>/points_corrected</code>, тот же тип, frame <code>lidar_level</code>.</li><li>Сохраняйте <code>header.stamp</code>, размер и порядок точек, <code>intensity</code> и остальные поля. Метка времени — момент измерения, а не момент обработки.</li><li>Обрабатывайте только точки, у которых все x/y/z конечные. Строки с NaN/Inf оставляйте на месте и без изменения.</li><li>Не используйте <code>create_cloud_xyz32</code>, если из-за него теряются дополнительные поля. Готовый <code>replace_xyz</code> сохраняет структуру и поля сообщения.</li><li>Изменение только <code>frame_id</code> не вращает координаты. <code>static_transform_publisher</code> вместо обработки и публикации нового облака это задание не выполняет.</li></ul>
+<p><code>run_check.json</code> проверяет число облаков и метки времени. Успешная проверка доставки ещё не означает, что облако ориентировано правильно.</p>
+<h2>6. Что сдавать</h2>
+<p>Сдайте <code>student_node.py</code>, <code>config.yaml</code>, номер варианта, <code>corrected.bag</code>, <code>run_check.json</code>, изображения до/после и 5–8 предложений о подборе углов. Покажите две промежуточные попытки. Итоговую запись берите из последней попытки; картинки должны соответствовать ей.</p>
+<p>Изображения дополняют работающую ноду и выходной бэг. Отсутствие X11/RViz не мешает сдаче. Автооценка нормали земли через RANSAC — необязательное продолжение после сдачи основного задания, не входит в обязательную часть.</p>
+<details><summary>Если RViz уже работает</summary><p>В готовом Linux-окружении с ROS 1 и RViz запустите <code>roscore</code>, отдельно <code>rosbag play --clock output/attempt01/corrected.bag</code> и <code>rviz -d view_corrected.rviz</code>. Выберите Fixed Frame <code>lidar_level</code>. Для просмотра исходного бэга используйте <code>lidar_corrupted</code> и <code>/points_raw</code>. Отсутствующее преобразование между этими frame нельзя заменять выдуманным identity TF. В базовый Docker GUI намеренно не включён; обязательный сценарий — PNG/GIF.</p></details>
+<details><summary>Если что-то не работает</summary><ul><li><b>NotImplementedError:</b> заполните TODO; заготовка не содержит решение.</li><li><b>Нет выходных сообщений:</b> проверьте <code>student.log</code>, имена топиков и Publisher/Subscriber.</li><li><b>Потери облаков:</b> уберите рисование из callback и повторите с <code>--rate 0.25</code>.</li><li><b>TF error в RViz:</b> Fixed Frame должен совпадать с frame отображаемого облака.</li><li><b>Docker не подключается:</b> запустите Docker Desktop и Linux containers до пары.</li><li><b>Дорога исчезла:</b> сравните PNG с прежними осями; не меняйте автоматический масштаб. При необходимости задайте одинаковый <code>--radius</code> для обеих картинок.</li></ul></details>
+<h2>Документация</h2>
+<p><a href="https://raw.githubusercontent.com/ros/common_msgs/noetic-devel/sensor_msgs/msg/PointCloud2.msg">Определение PointCloud2</a> · <a href="https://raw.githubusercontent.com/ros-infrastructure/rep/master/rep-0103.rst">Соглашения об осях ROS</a> · <a href="https://raw.githubusercontent.com/ros/geometry/noetic-devel/tf/src/tf/transformations.py">tf.transformations и порядок вращений</a>.</p>
+</main></body></html>

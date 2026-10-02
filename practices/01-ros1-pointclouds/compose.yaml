@@ -1,0 +1,12 @@
+services:
+  lab:
+    build: .
+    image: mirea-cloud-lab:noetic-v1
+    working_dir: /work
+    volumes:
+      - ./:/work
+    environment:
+      ROS_MASTER_URI: http://127.0.0.1:11311
+      ROS_HOSTNAME: localhost
+      MPLBACKEND: Agg
+    command: sleep infinity
