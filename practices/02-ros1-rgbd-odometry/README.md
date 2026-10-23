@@ -1,4 +1,4 @@
-# Практика 3. RGB-D-одометрия в ROS 1
+# Практика 2. RGB-D-одометрия в ROS 1
 
 **ROS 1 Noetic · OpenCV · Rerun**
 

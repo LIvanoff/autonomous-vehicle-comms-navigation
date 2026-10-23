@@ -28,5 +28,5 @@ instructor/
 answers_private.json
 solution_node.py
 
-# Учебный фрагмент открытого TUM RGB-D включён в практику 03.
-!practices/03-ros1-rgbd-odometry/data/tum_rgbd_12s.bag
+# Учебный фрагмент открытого TUM RGB-D включён в практику 02.
+!practices/02-ros1-rgbd-odometry/data/tum_rgbd_12s.bag
