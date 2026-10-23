@@ -10,6 +10,7 @@
 
 - Установите и запустите Docker Desktop с Linux containers (либо Docker Engine с Compose на Linux).
 - Распакуйте архив практики целиком в папку, доступную для записи.
+- [Скачайте учебный бэг TUM отдельно](https://github.com/LIvanoff/autonomous-vehicle-comms-navigation/raw/29c96ba7e98efba7c77fafe587646913174e33c1/practices/02-ros1-rgbd-odometry/data/tum_rgbd_12s.bag) (около 75 МБ) и сохраните его как `data/tum_rgbd_12s.bag`. Без этого файла запуск невозможен.
 - Подготовьте Docker-образы по инструкции ниже.
 - Подготовьте редактор кода и браузер Chrome или Edge с работающим графическим ускорением.
 
@@ -39,7 +40,7 @@ docker load -i rgbd-images.tar
 | --- | --- |
 | [student_node.py](catkin_ws/src/rgbd_vo_lab/scripts/student_node.py) | **Ваш файл: четыре TODO** |
 | [config.yaml](config.yaml) | Настройки задания |
-| `data/tum_rgbd_12s.bag` | Готовый учебный бэг TUM: 120 RGB-D пар, около 12 секунд, примерно 10 Гц, 640×480 |
+| `data/tum_rgbd_12s.bag` | Учебный бэг TUM (скачивается отдельно): 120 RGB-D пар, около 12 секунд, примерно 10 Гц, 640×480 |
 | `catkin_ws/src/rgbd_vo_lab/src/rgbd_vo_lab/` | Готовая математика и адаптер ROS |
 | [run_lab.py](run_lab.py) | Запуск ROS, вашей ноды, проигрывания бэга и проверки результата |
 | [viewer/show.py](viewer/show.py) | Подготовка записи Rerun и веб-просмотр |

@@ -1,3 +1,7 @@
+Бэг скачивается отдельно (около 75 МБ):
+https://github.com/LIvanoff/autonomous-vehicle-comms-navigation/raw/29c96ba7e98efba7c77fafe587646913174e33c1/practices/02-ros1-rgbd-odometry/data/tum_rgbd_12s.bag
+Сохраните файл в эту папку под именем tum_rgbd_12s.bag.
+
 Учебный bag: tum_rgbd_12s.bag
 Источник: TUM RGB-D Dataset, freiburg1_xyz.
 J. Sturm, N. Engelhard, F. Endres, W. Burgard, D. Cremers.

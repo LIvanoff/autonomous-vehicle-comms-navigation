@@ -1,6 +1,5 @@
 data/*
 !data/README.txt
-!data/tum_rgbd_12s.bag
 !data/tum_rgbd_12s.json
 output/
 catkin_ws/build/

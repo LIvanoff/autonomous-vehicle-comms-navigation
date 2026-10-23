@@ -4,6 +4,9 @@
 catkin_ws/src/rgbd_vo_lab/scripts/student_node.py
 Четыре TODO. Готовая математика не требует изменений.
 
+Скачайте бэг отдельно и сохраните как data/tum_rgbd_12s.bag:
+https://github.com/LIvanoff/autonomous-vehicle-comms-navigation/raw/29c96ba7e98efba7c77fafe587646913174e33c1/practices/02-ros1-rgbd-odometry/data/tum_rgbd_12s.bag
+
 До занятия: Docker Desktop (Linux containers), готовые образы и bag.
 GPU, Git, Python на хосте и X11 не нужны.
 Сборка образов из папки с compose.yaml:
@@ -31,7 +34,7 @@ Ctrl+C останавливает viewer. Перед повторным прос
 
 Это учебная RGB-D-одометрия (ORB + PnP), не полноценный SLAM.
 Масштаб даёт измеренная глубина TUM. Эталон алгоритму не передаётся.
-Полная исходная последовательность не нужна студентам; готовый учебный bag включён.
+Полная исходная последовательность не нужна студентам; готовый учебный bag скачивается отдельно по ссылке выше.
 
 Источник данных: TUM RGB-D, freiburg1_xyz
 https://cvg.cit.tum.de/data/datasets/rgbd-dataset

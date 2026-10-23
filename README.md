@@ -16,14 +16,14 @@
 ## Как начать
 
 ```sh
-git clone https://github.com/LIvanoff/autonomous-vehicle-comms-navigation.git
+git clone --depth 1 https://github.com/LIvanoff/autonomous-vehicle-comms-navigation.git
 cd autonomous-vehicle-comms-navigation/practices/01-ros1-pointclouds
 ```
 
 Далее следуйте [инструкции первой практики](practices/01-ros1-pointclouds/README.md). Индивидуальный `input.bag` для неё выдаётся отдельно.
 
-Для практики по RGB-D перейдите в `practices/02-ros1-rgbd-odometry` и откройте [README](practices/02-ros1-rgbd-odometry/README.md). Учебный бэг TUM (около 75 МБ) уже включён. Атрибуция и условия использования данных приведены в её `data/README.txt`.
+Для практики по RGB-D перейдите в `practices/02-ros1-rgbd-odometry` и откройте [README](practices/02-ros1-rgbd-odometry/README.md). Учебный бэг TUM (около 75 МБ) [скачивается отдельно](https://github.com/LIvanoff/autonomous-vehicle-comms-navigation/raw/29c96ba7e98efba7c77fafe587646913174e33c1/practices/02-ros1-rgbd-odometry/data/tum_rgbd_12s.bag); сохраните его в `practices/02-ros1-rgbd-odometry/data/tum_rgbd_12s.bag`. Атрибуция и условия использования данных приведены в её `data/README.txt`.
 
-Если Git не установлен, скачайте репозиторий через **Code → Download ZIP** и распакуйте архив.
+Если Git не установлен, скачайте репозиторий через **Code → Download ZIP** и распакуйте архив. Он содержит код и инструкции; бэг загружается отдельно. Для Git используйте приведённый выше `--depth 1`, чтобы не скачивать старые версии с данными.
 
 Для основной части практики достаточно Docker с Linux-контейнерами. Установка ROS на компьютер, GPU, RViz и X11 не требуются.
