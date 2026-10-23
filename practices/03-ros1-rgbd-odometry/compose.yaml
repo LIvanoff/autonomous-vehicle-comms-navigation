@@ -1,0 +1,20 @@
+services:
+  lab:
+    build: .
+    image: mirea-rgbd-vo:noetic-v1
+    volumes:
+      - ./:/lab
+    network_mode: none
+    environment:
+      ROS_MASTER_URI: http://127.0.0.1:11311
+      ROS_HOSTNAME: localhost
+    working_dir: /lab
+  viewer:
+    build: ./viewer
+    image: mirea-rgbd-viewer:0.23.4
+    volumes:
+      - ./:/lab
+    ports:
+      - "127.0.0.1:9090:9090"
+      - "127.0.0.1:9876:9876"
+    working_dir: /lab

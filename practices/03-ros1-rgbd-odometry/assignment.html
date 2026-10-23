@@ -1,0 +1,78 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Практика: RGB-D-одометрия в ROS 1</title>
+<style>body{font:19px/1.6 system-ui,sans-serif;max-width:1040px;margin:36px auto;padding:0 24px;color:#203343;background:#f8fafb}h1{font-size:38px;line-height:1.2}h2{margin-top:45px}a{color:#096c82}pre{background:#152c3b;color:#e9f3f9;padding:20px;overflow:auto;font:15px/1.6 Consolas,monospace}code{font-family:Consolas,monospace}td,th{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #cbd8df}table{border-collapse:collapse;width:100%}.note{border-left:4px solid #148579;padding:12px 20px;background:#e8f3f1}.time{color:#547180}</style>
+<h1>RGB-D-одометрия: как камера измеряет движение</h1>
+<p>ROS 1 Noetic · OpenCV · Rerun</p>
+<p>На этом занятии мы разберём, как по цветному изображению и глубине определить движение камеры. Ваша задача — дополнить ROS-ноду, запустить её на записи TUM RGB-D и сравнить полученную траекторию с эталонной. Выполните один запуск с настройками из config.yaml; изменять параметры алгоритма не требуется.</p>
+<p class="note">Математическую часть и синхронизацию сообщений я предоставляю готовыми. От вас требуется подключить алгоритм к ROS и объяснить результат. GPU, X11, Git и отдельная установка Python не нужны. До занятия должны быть установлены Docker Desktop с Linux containers и загружены образы.</p>
+<h2>Что лежит в папке</h2>
+<table><tr><th>Файл</th><th>Назначение</th></tr>
+<tr><td><code>data/tum_rgbd_12s.bag</code></td><td>120 RGB-D пар, около 12 секунд, 640×480, примерно 10 Гц. Глубина в метрах.</td></tr>
+<tr><td><code>catkin_ws/src/rgbd_vo_lab/scripts/student_node.py</code></td><td><b>Ваш файл: четыре TODO.</b></td></tr>
+<tr><td><code>config.yaml</code></td><td>Параметры опыта. Для первого запуска оставьте как есть.</td></tr>
+<tr><td><code>catkin_ws/src/rgbd_vo_lab/src/rgbd_vo_lab/</code></td><td>Готовая математическая часть и адаптер ROS. Изменять не требуется.</td></tr>
+<tr><td><code>run_lab.py</code></td><td>Запускает roscore, вашу ноду, запись выходных поз и rosbag play. Проверяет результат.</td></tr>
+<tr><td><code>viewer/show.py</code></td><td>Создаёт запись Rerun и открывает веб-просмотр результата.</td></tr></table>
+<h2>1. Подготовить рабочее место</h2>
+<p>Распакуйте папку в доступное для записи место. Откройте PowerShell или терминал Linux <b>в папке с compose.yaml</b>. Проверка окружения:</p>
+<pre>docker version
+docker compose version
+docker image ls</pre>
+<p>Нужны образы <code>mirea-rgbd-vo:noetic-v1</code> и <code>mirea-rgbd-viewer:0.23.4</code>. Если их ещё нет, заранее выполните <code>docker compose build</code> либо загрузите полученный от меня архив через <code>docker load -i rgbd-images.tar</code>.</p>
+<p>Откройте контейнер ROS:</p>
+<pre>docker compose run --rm lab bash</pre>
+<p>Внутри него выполните:</p>
+<pre>source /opt/ros/noetic/setup.bash
+cd /lab/catkin_ws
+catkin_make -j2
+source devel/setup.bash
+cd /lab
+rosbag info data/tum_rgbd_12s.bag</pre>
+<p><code>catkin_make</code> находит пакет и подготавливает его запуск. У Python-ноды нет компиляции в машинный код. Команда <code>source devel/setup.bash</code> добавляет пакет в окружение текущего терминала.</p>
+<h2>2. Дописать ноду</h2>
+<p>Откройте <code>student_node.py</code> обычным редактором на своём компьютере. Папка подключена к контейнеру, поэтому сохранённые изменения сразу доступны внутри ROS.</p>
+<ol><li>Создайте <code>rospy.Publisher</code> для топика <code>/vo/pose</code>, тип <code>PoseStamped</code>, очередь 10. Сохраните объект в <code>self.pub</code>.</li>
+<li>Создайте три <code>message_filters.Subscriber</code>: <code>self.rgb_sub</code> для <code>/camera/rgb/image_raw</code> (Image), <code>self.depth_sub</code> для <code>/camera/depth/image_raw</code> (Image), <code>self.info_sub</code> для <code>/camera/rgb/camera_info</code> (CameraInfo). Для всех задайте <code>queue_size=10</code>, для двух изображений также <code>buff_size=2**25</code>. Удалите строку <code>raise NotImplementedError(...)</code>. Готовый блок TimeSynchronizer оставьте без изменений.</li>
+<li>В callback передайте <code>color, depth, info</code> в <code>self.lab.process_messages(...)</code> и сохраните результат.</li>
+<li>Если результат не равен <code>None</code>, опубликуйте его через свой publisher.</li></ol>
+<p>Callback получает три согласованных сообщения: RGB, depth и параметры камеры. Подписчики создаёте вы. Готовый блок <code>TimeSynchronizer</code> в ноде хранит до 20 сообщений каждого входа и вызывает callback, когда получена тройка с одинаковым <code>header.stamp</code>. Порядок аргументов callback совпадает с порядком подписчиков в списке. <code>process_messages</code> возвращает готовый <code>PoseStamped</code> или <code>None</code>, если кадр пропущен по настройке либо оценка ненадёжна. При <code>None</code> не публикуйте выдуманное или старое положение с новой меткой времени.</p>
+<table><tr><th>Топик</th><th>Тип и смысл</th></tr>
+<tr><td><code>/camera/rgb/image_raw</code></td><td><code>sensor_msgs/Image</code>, RGB</td></tr>
+<tr><td><code>/camera/depth/image_raw</code></td><td><code>sensor_msgs/Image</code>, 32FC1, метры</td></tr>
+<tr><td><code>/camera/rgb/camera_info</code></td><td><code>sensor_msgs/CameraInfo</code>, параметры камеры</td></tr>
+<tr><td><code>/vo/pose</code></td><td><code>geometry_msgs/PoseStamped</code>, ваша публикация</td></tr>
+<tr><td><code>/vo/path</code></td><td><code>nav_msgs/Path</code>, готовый recorder собирает путь из опубликованных поз</td></tr>
+<tr><td><code>/ground_truth/pose</code></td><td>Эталон motion capture. Используется только проверкой, не алгоритмом одометрии.</td></tr></table>
+<h2>3. Собрать и запустить</h2>
+<p>В контейнере после сохранения файла:</p>
+<pre>cd /lab/catkin_ws
+catkin_make -j2
+source devel/setup.bash
+cd /lab
+python3 run_lab.py data/tum_rgbd_12s.bag --out output/attempt01</pre>
+<p>Скрипт действительно запускает вашу ноду через <code>rosrun rgbd_vo_lab student_node.py</code> и проигрывает bag. Скорость проигрывания 0,25 выбрана, чтобы обычный ноутбук успевал обрабатывать кадры. Данные и физические временные метки остаются исходными.</p>
+<p>После успешного запуска появятся <code>report.json</code>, <code>poses.bag</code>, логи и данные для Rerun. Для следующего опыта указывайте новую папку, например <code>output/attempt02</code>. Старые попытки сохраняются.</p>
+<h2>4. Посмотреть результат в Rerun</h2>
+<p>В <b>новом терминале компьютера</b>, в папке практики:</p>
+<pre>docker compose run --rm --service-ports viewer python viewer/show.py output/attempt01 --serve</pre>
+<p>Откройте <a href="http://localhost:9090/?url=rerun%2Bhttp%3A%2F%2Flocalhost%3A9876%2Fproxy">Rerun в браузере</a>. Нужен современный Chrome или Edge с поддержкой графики WebGPU/WebGL. Отдельный сервер X11 не нужен.</p>
+<ul><li><b>Траектории:</b> оранжевая — оценка, зелёная — эталон. Первая вкладка — проекция на плоскость XZ первой камеры (ось Y здесь не показана); следующая — полный 3D-путь. Начало координат находится в первой камере.</li>
+<li><b>Карта RGB-D:</b> отдельная вкладка с точками сцены. Это разреженный предпросмотр, он может двоиться из-за ошибки движения.</li>
+<li><b>Соответствия:</b> зелёные линии поддержали модель, красные отвергнуты. Линия соединяет координаты детали в опорном и текущем кадрах; это не вектор скорости автомобиля.</li>
+<li><b>Глубина:</b> измеренное расстояние вдоль оптической оси, в метрах. Нулевые значения означают отсутствие измерения.</li>
+<li><b>Проверка:</b> число полученных оценок, потери отслеживания и ошибка относительно эталона.</li></ul>
+<p>Если шкала времени скрыта, откройте её кнопкой панели времени в правом верхнем углу Rerun. Перемещайте указатель по кадрам и включите воспроизведение. Для скорости, близкой к исходной записи, выставьте <b>10 FPS</b> вместо стандартных 30 FPS. Это только скорость просмотра, она не меняет вычисленные позы. После просмотра нажмите Ctrl+C в терминале viewer. Сохранённый <code>recording.rrd</code> остаётся в папке результата.</p>
+<h2>5. Разобрать результат</h2>
+<p>Откройте <code>output/attempt01/report.json</code>. Сопоставьте отчёт с траекториями в Rerun: насколько близки оценка и эталон, где видны расхождения и были ли потери отслеживания.</p>
+<p><code>processed</code> — обработано кадров; <code>published</code> — опубликовано поз; <code>lost</code> — число потерянных оценок; <code>tracking_fraction</code> — доля успешных оценок среди обработанных кадров; <code>position_rmse_m</code> — среднеквадратическая ошибка положения в метрах.</p>
+<p>RMSE считается только по опубликованным позам. Потерянные оценки в эту метрику не входят, поэтому рассматривайте ошибку и долю успешных оценок вместе.</p>
+<h2>6. Что сдать</h2>
+<ul><li>Дополненный <code>student_node.py</code>.</li><li>Файл <code>report.json</code> успешного запуска и снимок Rerun с оценённой и эталонной траекториями.</li><li>Короткие ответы: откуда взялись метры; зачем нужна глубина; почему возможны потери; что показывает RMSE и почему нужно также учитывать потери отслеживания.</li></ul>
+<p>Объясните одну цепочку своими словами: <b>кадры → соответствия → 3D-точки по глубине → PnP → преобразование позы → публикация.</b></p>
+<h2>Если что-то не работает</h2>
+<ul><li><b>Docker не отвечает:</b> запустите Docker Desktop, дождитесь готовности Linux engine.</li><li><b>TODO / node exited:</b> проверьте четыре места в <code>student_node.py</code> и <code>output/attempt01/student.log</code>.</li><li><b>Пакет не найден:</b> выполните <code>catkin_make</code> и <code>source devel/setup.bash</code> именно в текущем контейнере.</li><li><b>Not all RGB-D frames received:</b> повторите запуск медленнее в новой папке: <code>python3 run_lab.py data/tum_rgbd_12s.bag --rate 0.1 --out output/attempt01_slow</code>. Временные метки данных сохраняются.</li><li><b>Папка результата уже существует:</b> задайте новый номер попытки.</li><li><b>Порт занят:</b> остановите предыдущий viewer через Ctrl+C. В крайнем случае <code>docker compose down</code> остановит контейнеры этой практики.</li><li><b>Rerun пустой:</b> дождитесь строки Saved в терминале, затем обновите страницу. Проверьте полный адрес с параметром <code>url=...</code>.</li><li><b>Браузер не создаёт графический контекст:</b> используйте актуальный Chrome/Edge или откройте файл RRD в нативном Rerun версии 0.23.4.</li></ul>
+<p>По завершении выполните <code>exit</code> в ROS-контейнере. Благодаря <code>--rm</code> он удалится автоматически. Файлы в папке практики сохранятся.</p>
+<h2>Источники и границы результата</h2>
+<p><a href="https://cvg.cit.tum.de/data/datasets/rgbd-dataset">TUM RGB-D</a>, последовательность freiburg1_xyz. <a href="https://cvg.cit.tum.de/data/datasets/rgbd-dataset/file_formats">Формат глубины и рекомендуемые параметры</a>. <a href="https://docs.opencv.org/4.2.0/d5/d1f/calib3d_solvePnP.html">OpenCV PnP</a>. <a href="https://rerun.io/">Rerun</a>.</p>
+<p>Это учебная одометрия между кадрами, без bundle adjustment и замыкания петли. Эталон совмещается с первой позой, масштаб и вся траектория под результат не подгоняются. Глубина TUM совмещена с RGB; в учебном бэге ближайшая depth-пара в пределах 20 мс получает метку RGB для точной ROS-синхронизации. Исходные метки сохранены в manifest. nuPlan с одной RGB-камерой не подходит для запуска этой RGB-D-ноды.</p>
+</html>

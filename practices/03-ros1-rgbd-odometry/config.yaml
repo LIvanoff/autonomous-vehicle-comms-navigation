@@ -1,0 +1,7 @@
+max_features: 1600
+frame_stride: 1
+min_inliers: 20
+ratio_test: 0.75
+ransac_pixels: 2.5
+max_step_m: 0.30
+max_rotation_deg: 25.0

@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(rgbd_vo_lab)
+find_package(catkin REQUIRED COMPONENTS rospy sensor_msgs geometry_msgs nav_msgs std_msgs cv_bridge message_filters tf)
+catkin_python_setup()
+catkin_package()
+catkin_install_python(PROGRAMS scripts/student_node.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
