@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | [01. Ориентация облака точек](practices/01-ros1-pointclouds/) | ROS-нода, `PointCloud2`, повороты координат, чтение и запись bag | ROS 1 Noetic, Python 3, Docker |
 | [02. RGB-D-одометрия](practices/02-ros1-rgbd-odometry/) | Подписчики и publisher, синхронизация RGB-D, оценка движения камеры, визуализация | ROS 1 Noetic, OpenCV, Rerun, Docker |
-| [03. Распознавание места](practices/03-place-recognition/) | ITLP-Campus, OPR ResNet18 + GeM, поиск top-k, Recall@K, анализ дневных и ночных кадров | Python, PyTorch CPU, браузер; 90 минут |
+| [03. Распознавание места](practices/03-place-recognition/) | ITLP-Campus, OPR ResNet18 + GeM, поиск top-k, Recall@K, анализ дневных и ночных кадров | Python, PyTorch CPU, браузер |
 
 ## Как начать
 

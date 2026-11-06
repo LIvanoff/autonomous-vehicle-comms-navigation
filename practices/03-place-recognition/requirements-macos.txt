@@ -1,0 +1,11 @@
+--index-url https://pypi.org/simple
+# Native Apple Silicon Python (M1/M2/M3/M4 and newer).
+torch==2.7.1 ; platform_machine == "arm64"
+torchvision==0.22.1 ; platform_machine == "arm64"
+numpy==2.2.6 ; platform_machine == "arm64"
+# Intel Mac, or x86_64 Python under Rosetta. NumPy 1.x for this PyTorch version.
+torch==2.2.2 ; platform_machine == "x86_64"
+torchvision==0.17.2 ; platform_machine == "x86_64"
+numpy==1.26.4 ; platform_machine == "x86_64"
+pillow==11.3.0
+psutil==7.0.0
