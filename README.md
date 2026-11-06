@@ -6,12 +6,13 @@
 
 ## Материалы
 
-Опубликованы практики по работе с облаками точек и RGB-D-одометрии. Лекции будут добавляться отдельно.
+Опубликованы практики по работе с облаками точек, RGB-D-одометрии и распознаванию мест. Лекции будут добавляться отдельно.
 
 | Практика | Тема | Окружение |
 | --- | --- | --- |
 | [01. Ориентация облака точек](practices/01-ros1-pointclouds/) | ROS-нода, `PointCloud2`, повороты координат, чтение и запись bag | ROS 1 Noetic, Python 3, Docker |
 | [02. RGB-D-одометрия](practices/02-ros1-rgbd-odometry/) | Подписчики и publisher, синхронизация RGB-D, оценка движения камеры, визуализация | ROS 1 Noetic, OpenCV, Rerun, Docker |
+| [03. Распознавание места](practices/03-place-recognition/) | ITLP-Campus, OPR ResNet18 + GeM, поиск top-k, Recall@K, анализ дневных и ночных кадров | Python, PyTorch CPU, браузер; 90 минут |
 
 ## Как начать
 
@@ -26,4 +27,6 @@ cd autonomous-vehicle-comms-navigation/practices/01-ros1-pointclouds
 
 Если Git не установлен, скачайте репозиторий через **Code → Download ZIP** и распакуйте архив. Он содержит код и инструкции; бэг загружается отдельно. Для Git используйте приведённый выше `--depth 1`, чтобы не скачивать старые версии с данными.
 
-Для основной части практики достаточно Docker с Linux-контейнерами. Установка ROS на компьютер, GPU, RViz и X11 не требуются.
+Для практик 01–02 достаточно Docker с Linux-контейнерами. Установка ROS на компьютер, GPU, RViz и X11 не требуются.
+
+Для [практики 03](practices/03-place-recognition/README.md) нужны Python 3.11/3.12 и CPU PyTorch, Docker не требуется. Изображения ITLP-Campus, веса и кэш входят в комплект. [Проверка времени и памяти](practices/03-place-recognition/BENCHMARK.md) и [примеры поиска](practices/03-place-recognition/demo/search-success.png) опубликованы вместе с заданием.
